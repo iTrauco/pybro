@@ -1,6 +1,6 @@
 # README
 
-Pybowser-skeleton python cli tool for task specific browser window and tab url management and automation.
+Python cli tool for task specific browser window and tab url management and automation.
 
 ## Objective
 The creation of a python cli skeleton to automate the manual digital task setup and tear process for common enterprise systems gui-based admnistrative actions and workflows with out of the box compatibility with windows os for v1 native features without the added abstractions of pki, apis, idps, and anything / everything related to authentication and authorization. 😇
