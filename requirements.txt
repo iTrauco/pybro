@@ -1,0 +1,10 @@
+# 📄 ./requirements.txt
+rich>=10.0.0
+pathlib>=1.0.1
+typing>=3.7.4
+# Note: pathlib and typing are included in Python 3.5+, but listed for compatibility++
+
+# Development requirements
+pytest>=7.0.0
+black>=22.0.0
+flake8>=4.0.0
