@@ -107,12 +107,23 @@ class ChromeProfileManagerCLI:
             alias_name = self._get_valid_alias_name()
             url = Prompt.ask("🔗 Enter URL (e.g., https://example.com)")
             
+            # Ensure URL has protocol
+            if url and not url.startswith(('http://', 'https://')):
+                url = 'https://' + url
+            
             log.debug(f"Creating alias: {alias_name} for profile: {profile.name} with URL: {url}")
-            alias_cmd = self.alias_manager.create_chrome_alias(alias_name, profile.name, url)
+            
+            # Use the exact profile directory name
+            alias_cmd = self.alias_manager.create_chrome_alias(
+                alias_name=alias_name,
+                profile=profile.name,  # This is the key change - using the exact profile directory name
+                url=url
+            )
             
             if self.alias_manager.add_alias_to_zshrc(alias_cmd):
                 profile_type = "local" if profile.is_local else f"signed-in ({profile.email})"
                 console.print(f"\n✅ Created alias for {profile_type} profile", style="green")
+                console.print(f"✅ Command created: {alias_cmd}", style="dim")
                 console.print("\n🔄 Reload your shell or run 'source ~/.zshrc'", style="italic")
             
         except Exception as e:
