@@ -11,16 +11,12 @@ from rich.prompt import Prompt
 from rich.logging import RichHandler
 from rich.traceback import install
 
-from helpers.alias_creator import ChromeAliasManager
-
-
-
 # Add project root to Python path
 sys.path.append(str(Path(__file__).parent))
 
 # Import local modules
 try:
-    from utils.chrome_scanner import ChromeProfileScanner
+    from utils.chrome_scanner import ChromeProfileScanner, ChromeProfile
     from helpers.alias_creator import ChromeAliasManager
     from config.settings import CLI_TITLE, CLI_VERSION
 except ImportError as e:
@@ -96,18 +92,38 @@ class ChromeProfileManagerCLI:
         console.print("\n🆕 Create New Chrome Profile URL Alias", style="bold green")
         
         try:
-            profile_users = self._get_profiles()
-            if not profile_users:
+            # Ask if user wants to include local profiles
+            include_local = Prompt.ask(
+                "\nInclude local profiles?",
+                choices=["y", "n"],
+                default="y"
+            ) == "y"
+            
+            profile = self._get_profile_selection(include_local)
+            if not profile:
+                console.print("⚠️ No profile selected", style="yellow")
                 return
-
-            profile = self._get_profile_selection(profile_users)
+                
             alias_name = self._get_valid_alias_name()
             url = Prompt.ask("🔗 Enter URL (e.g., https://example.com)")
             
-            log.debug(f"Creating alias: {alias_name} for profile: {profile} with URL: {url}")
-            alias_cmd = self.alias_manager.create_chrome_alias(alias_name, profile, url)
+            # Ensure URL has protocol
+            if url and not url.startswith(('http://', 'https://')):
+                url = 'https://' + url
+            
+            log.debug(f"Creating alias: {alias_name} for profile: {profile.name} with URL: {url}")
+            
+            # Use the exact profile directory name
+            alias_cmd = self.alias_manager.create_chrome_alias(
+                alias_name=alias_name,
+                profile=profile.name,  # This is the key change - using the exact profile directory name
+                url=url
+            )
             
             if self.alias_manager.add_alias_to_zshrc(alias_cmd):
+                profile_type = "local" if profile.is_local else f"signed-in ({profile.email})"
+                console.print(f"\n✅ Created alias for {profile_type} profile", style="green")
+                console.print(f"✅ Command created: {alias_cmd}", style="dim")
                 console.print("\n🔄 Reload your shell or run 'source ~/.zshrc'", style="italic")
             
         except Exception as e:
@@ -123,17 +139,25 @@ class ChromeProfileManagerCLI:
         console.print("\n🆕 Create New Chrome Profile Homepage Alias", style="bold green")
         
         try:
-            profile_users = self._get_profiles()
-            if not profile_users:
+            include_local = Prompt.ask(
+                "\nInclude local profiles?",
+                choices=["y", "n"],
+                default="y"
+            ) == "y"
+            
+            profile = self._get_profile_selection(include_local)
+            if not profile:
+                console.print("⚠️ No profile selected", style="yellow")
                 return
-
-            profile = self._get_profile_selection(profile_users)
+            
             alias_name = self._get_valid_alias_name()
             
-            log.debug(f"Creating homepage alias: {alias_name} for profile: {profile}")
-            alias_cmd = self.alias_manager.create_chrome_alias(alias_name, profile)
+            log.debug(f"Creating homepage alias: {alias_name} for profile: {profile.name}")
+            alias_cmd = self.alias_manager.create_chrome_alias(alias_name, profile.name)
             
             if self.alias_manager.add_alias_to_zshrc(alias_cmd):
+                profile_type = "local" if profile.is_local else f"signed-in ({profile.email})"
+                console.print(f"\n✅ Created alias for {profile_type} profile", style="green")
                 console.print("\n🔄 Reload your shell or run 'source ~/.zshrc'", style="italic")
             
         except Exception as e:
@@ -143,14 +167,59 @@ class ChromeProfileManagerCLI:
             input("\nPress Enter to continue...")
 
     def list_profiles(self) -> None:
-        """📋 Lists all available Chrome profiles"""
-        log.debug("Listing Chrome profiles")
+        """Enhanced profile listing with detailed information"""
+        log.debug("Listing Chrome profiles with enhanced information")
         console.clear()
-        console.print("\n📋 Current Chrome Profiles", style="bold green")
+        console.print("\n📋 Chrome Profiles Overview", style="bold green")
         
         try:
-            profile_users = self.scanner.get_profile_users()
-            self._display_profiles(profile_users)
+            profiles = self.scanner.get_detailed_profiles()
+            
+            # Display signed-in profiles
+            console.print("\n🔐 Signed-in Profiles:", style="bold blue")
+            signed_in = [p for p in profiles.values() if p.email]
+            if signed_in:
+                for profile in signed_in:
+                    profile_info = f"[cyan]{profile.name}[/cyan]"
+                    if profile.email:
+                        username, domain = profile.email.split('@')
+                        profile_info += f" ([bold green]{username}[/bold green]@[bold]{domain}[/bold])"
+                        if profile.custom_name:
+                            profile_info += f" - [blue]{profile.custom_name}[/blue]"
+                    console.print(f"  • {profile_info}")
+            else:
+                console.print("  No signed-in profiles found", style="italic")
+
+            # Display local profiles
+            console.print("\n📂 Local Profiles:", style="bold green")
+            local = [p for p in profiles.values() if p.is_local]
+            if local:
+                for profile in local:
+                    profile_info = f"[cyan]{profile.name}[/cyan]"
+                    if profile.custom_name:
+                        profile_info += f" [yellow](Local Profile - {profile.custom_name})[/yellow]"
+                    else:
+                        profile_info += " [yellow](Local Profile)[/yellow]"
+                    console.print(f"  • {profile_info}")
+            else:
+                console.print("  No local profiles found", style="italic")
+            
+            # Show detailed information if requested
+            if Prompt.ask("\nShow detailed information?", choices=["y", "n"], default="n") == "y":
+                console.print("\n📋 Detailed Profile Information:", style="bold magenta")
+                for profile in profiles.values():
+                    console.print("\nProfile Details:", style="bold")
+                    console.print(f"  Directory: [cyan]{profile.name}[/cyan]")
+                    console.print(f"  Type: {'[yellow]Local[/yellow]' if profile.is_local else '[blue]Signed-in[/blue]'}")
+                    if profile.email:
+                        username, domain = profile.email.split('@')
+                        email_display = f"[bold green]{username}[/bold green]@[bold]{domain}[/bold]"
+                        console.print(f"  Email: {email_display}")
+                    if profile.custom_name:
+                        console.print(f"  Profile Name: [blue]{profile.custom_name}[/blue]")
+                    if profile.last_used:
+                        console.print(f"  Last Used: [italic]{profile.last_used}[/italic]")
+                    
         except Exception as e:
             log.error(f"❌ Error listing profiles: {e}")
             console.print(f"\n⚠️ Failed to list profiles: {e}", style="bold red")
@@ -170,9 +239,10 @@ class ChromeProfileManagerCLI:
 
             # Chrome profiles
             console.print("\n👤 Chrome Profiles:", style="bold green")
-            profiles = self.scanner.get_chrome_profiles()
-            for profile in profiles:
-                console.print(f"  - {profile}")
+            profiles = self.scanner.get_detailed_profiles()
+            for profile in profiles.values():
+                profile_type = "Local" if profile.is_local else f"Signed-in ({profile.email})"
+                console.print(f"  - [cyan]{profile.name}[/cyan] [{profile_type}]")
 
             # Configuration
             console.print("\n⚙️ Configuration:", style="bold green")
@@ -186,48 +256,59 @@ class ChromeProfileManagerCLI:
         finally:
             input("\nPress Enter to continue...")
 
-    def _get_profiles(self) -> Optional[Dict[str, str]]:
-        """Helper method to get and validate profiles"""
-        try:
-            profile_users = self.scanner.get_profile_users()
-            if not self._display_profiles(profile_users):
-                return None
-            return profile_users
-        except Exception as e:
-            log.error(f"❌ Error getting profiles: {e}")
-            return None
-
-    def _display_profiles(self, profile_users: Dict[str, str]) -> bool:
-        """Helper method to display profile list with error handling"""
-        try:
-            if not profile_users:
-                console.print("\n❌ No Chrome profiles found!", style="bold red")
-                return False
-            
-            console.print("\n📊 Available Profiles:", style="bold blue")
-            for i, (profile, email) in enumerate(profile_users.items(), 1):
-                console.print(f"{i}. {profile}: {email}")
-            return True
-        except Exception as e:
-            log.error(f"❌ Error displaying profiles: {e}")
-            return False
-
-    def _get_profile_selection(self, profile_users: Dict[str, str]) -> str:
-        """Helper method to get profile selection with validation"""
+    def _get_profile_selection(self, include_local: bool = True) -> Optional[ChromeProfile]:
+        """Enhanced profile selection with detailed profile information"""
         while True:
             try:
+                profiles = self.scanner.get_detailed_profiles()
+                
+                # Filter profiles based on include_local
+                if not include_local:
+                    profiles = {k: v for k, v in profiles.items() if not v.is_local}
+                
+                if not profiles:
+                    console.print("⚠️ No suitable profiles found!", style="yellow")
+                    return None
+                
+                # Display available profiles
+                console.print("\n📊 Available Profiles:", style="bold blue")
+                for i, (_, profile) in enumerate(profiles.items(), 1):
+                    # Format the profile display
+                    if profile.is_local:
+                        profile_info = f"[cyan]{profile.name}[/cyan]"
+                        if profile.custom_name:
+                            profile_info += f" [yellow](Local Profile - {profile.custom_name})[/yellow]"
+                        else:
+                            profile_info += " [yellow](Local Profile)[/yellow]"
+                    else:
+                        profile_info = f"[cyan]{profile.name}[/cyan]"
+                        if profile.email:
+                            username, domain = profile.email.split('@')
+                            profile_info += f" ([bold green]{username}[/bold green]@[bold]{domain}[/bold])"
+                            if profile.custom_name:
+                                profile_info += f" - [blue]{profile.custom_name}[/blue]"
+                    
+                    console.print(f"{i}. {profile_info}")
+                
                 profile_index = int(Prompt.ask("\n👆 Select profile number", default="1"))
-                if 1 <= profile_index <= len(profile_users):
-                    return list(profile_users.keys())[profile_index - 1]
+                if 1 <= profile_index <= len(profiles):
+                    return list(profiles.values())[profile_index - 1]
+                
                 console.print("⚠️ Invalid profile number", style="yellow")
-            except ValueError:
-                console.print("⚠️ Please enter a valid number", style="yellow")
+                
+            except ValueError as e:
+                console.print(f"⚠️ Invalid input: {str(e)}", style="yellow")
+                return None
+            except Exception as e:
+                log.error(f"❌ Error in profile selection: {e}")
+                console.print(f"⚠️ Error: {str(e)}", style="bold red")
+                return None
 
     def _get_valid_alias_name(self) -> str:
         """Helper method to get and validate alias name"""
         while True:
             alias_name = Prompt.ask("🏷️ Enter alias name (e.g., work-chrome)")
-            if alias_name and alias_name.isalnum() or "-" in alias_name:
+            if alias_name and (alias_name.replace("-", "").isalnum()):
                 return alias_name
             console.print("⚠️ Invalid alias name. Use letters, numbers, and hyphens only.", style="yellow")
 
