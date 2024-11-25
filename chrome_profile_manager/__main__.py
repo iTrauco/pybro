@@ -1,13 +1,10 @@
-#!/usr/bin/env python3
 # 📄 chrome_profile_manager/__main__.py
-
 """
-Entry point for the Chrome Profile Manager when run as a module
+Entry point for the CLI
 """
 from .main import ChromeProfileManagerCLI
 
 def main():
-    """Main entry point for the CLI"""
     try:
         cli = ChromeProfileManagerCLI()
         cli.display_main_menu()

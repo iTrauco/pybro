@@ -2,41 +2,43 @@
 🎮 Chrome Profile Manager CLI
 Main entry point for the Chrome Profile Manager application with enhanced debugging
 """
+# Standard library imports
 import sys
 import logging
 from pathlib import Path
 from typing import Dict, Optional
+
+# Third-party imports
 from rich.console import Console
 from rich.prompt import Prompt
 from rich.logging import RichHandler
 from rich.traceback import install
 
-# Add project root to Python path
-sys.path.append(str(Path(__file__).parent))
+# Local module imports - using relative imports
+from .utils.chrome_scanner import ChromeProfileScanner, ChromeProfile
+from .helpers.alias_creator import ChromeAliasManager
+from .config.settings import (
+   CLI_TITLE,
+   CLI_VERSION,
+   CHROME_CONFIG_PATH,
+   ZSHRC_PATH
+)
 
-# Import local modules
-try:
-    from utils.chrome_scanner import ChromeProfileScanner, ChromeProfile
-    from helpers.alias_creator import ChromeAliasManager
-    from config.settings import CLI_TITLE, CLI_VERSION
-except ImportError as e:
-    print(f"❌ Import Error: {e}")
-    print("📁 Current Python Path:")
-    for path in sys.path:
-        print(f"  - {path}")
-    sys.exit(1)
+# Add project root to Python path (if needed)
+sys.path.append(str(Path(__file__).parent))
 
 # Setup rich traceback handling
 install(show_locals=True)
 
 # Configure logging
 logging.basicConfig(
-    level="DEBUG",
-    format="%(message)s",
-    datefmt="[%X]",
-    handlers=[RichHandler(rich_tracebacks=True)]
+   level="DEBUG",
+   format="%(message)s",
+   datefmt="[%X]",
+   handlers=[RichHandler(rich_tracebacks=True)]
 )
 
+# Initialize logger and console
 log = logging.getLogger("chrome_manager")
 console = Console()
 
@@ -116,7 +118,7 @@ class ChromeProfileManagerCLI:
             # Use the exact profile directory name
             alias_cmd = self.alias_manager.create_chrome_alias(
                 alias_name=alias_name,
-                profile=profile.name,  # This is the key change - using the exact profile directory name
+                profile=profile.name,
                 url=url
             )
             
@@ -246,7 +248,6 @@ class ChromeProfileManagerCLI:
 
             # Configuration
             console.print("\n⚙️ Configuration:", style="bold green")
-            from config.settings import CHROME_CONFIG_PATH, ZSHRC_PATH
             console.print(f"  Chrome Config: {CHROME_CONFIG_PATH}")
             console.print(f"  ZSHRC Path: {ZSHRC_PATH}")
             

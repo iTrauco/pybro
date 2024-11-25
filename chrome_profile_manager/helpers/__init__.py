@@ -1,7 +1,6 @@
-
-# 2. 📄 ./helpers/__init__.py
+# 📄 chrome_profile_manager/helpers/__init__.py
 """
-Initialize helpers module and expose ChromeAliasManager
+Helpers package initialization
 """
 from .alias_creator import ChromeAliasManager
 
