@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any
 import logging
 import subprocess
+import shlex
 
 # Third-party imports
 from rich.console import Console
@@ -36,7 +37,7 @@ class ChromeAliasManager:
     @staticmethod
     def create_chrome_alias(alias_name: str, profile: str, url: Optional[str] = None) -> str:
         """
-        🔨 Creates a Chrome alias command
+        🔨 Creates a Chrome alias command with exact quoting format
         Args:
             alias_name: Name for the new alias
             profile: Chrome profile directory name
@@ -44,24 +45,19 @@ class ChromeAliasManager:
         Returns: Formatted alias command
         """
         try:
-            # Build the Chrome command with proper profile directory and URL handling
-            chrome_cmd = [
-                f'{CHROME_BINARY}',
-                f'--profile-directory="{profile}"',  # Ensure profile directory is quoted
-                '--new-window'  # Force new window
-            ]
+            # Start with the basic command
+            chrome_cmd = f'{CHROME_BINARY} --profile-directory=\\"Profile {profile.split()[-1]}\\" --new-window'
             
             # Add URL if provided
             if url:
                 if not url.startswith(('http://', 'https://')):
                     url = f'https://{url}'
-                chrome_cmd.append(f'"{url}"')
+                chrome_cmd = f'{chrome_cmd} "{url}"'
+            else:
+                chrome_cmd = f'{chrome_cmd} \\'  # Add backslash if no URL
             
-            # Join command parts with spaces
-            full_cmd = ' '.join(chrome_cmd)
-            
-            # Create the alias command
-            alias_cmd = f'alias {alias_name}="{full_cmd}"'
+            # Create the complete alias command
+            alias_cmd = f'alias {alias_name}="{chrome_cmd}"'
             
             log.debug(f"Created alias command: {alias_cmd}")
             return alias_cmd
@@ -116,10 +112,10 @@ class ChromeAliasManager:
                     console.print("⚠️ Alias already exists!", style="yellow")
                     return False
             
-            # Add new alias with description
+            # Add new alias with description and ensure proper formatting
             with open(ZSHRC_PATH, "a") as f:
-                f.write(f"\n# 🌐 Chrome Profile Alias - Created by PyBro CLI\n")
-                f.write(f"{alias_cmd}\n")
+                f.write("\n# 🌐 Chrome Profile Alias - Created by PyBro CLI")
+                f.write(f"\n{alias_cmd}\n")
             
             # Show success message with command preview
             console.print("✅ Added alias to .zshrc:", style="green")

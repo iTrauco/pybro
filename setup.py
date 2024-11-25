@@ -2,8 +2,8 @@
 from setuptools import setup, find_packages
 
 setup(
-   name="pybro-cli",  # New PyPI package name 
-   version="0.1.0",
+   name="pybro-cli",
+   version="0.1.1",  # Updated version
    packages=find_packages(),
    include_package_data=True,
    install_requires=[
@@ -11,8 +11,8 @@ setup(
    ],
    entry_points={
        "console_scripts": [
-           "pybro=chrome_profile_manager.__main__:main",  # Main command
-           "pybro-chrome=chrome_profile_manager.__main__:main",  # Alternative command
+           "pybro=chrome_profile_manager.__main__:main",
+           "pybro-chrome=chrome_profile_manager.__main__:main",
        ],
    },
    author="Chris Trauco",
