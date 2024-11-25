@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
    name="pybro-cli",
-   version="0.1.4",  # Increment version
+   version="0.1.5",  # Increment version
    packages=find_packages(),
    include_package_data=True,
    install_requires=[
@@ -21,7 +21,7 @@ setup(
    description="🔥 PyBro CLI - A Collection of Python Dev Tools for Debian 24.04",
    long_description=open("README.md").read(),
    long_description_content_type="text/markdown",
-   url="https://github.com/yourusername/pybro-cli",
+   url="https://github.com/iTrauco/pybro",
    classifiers=[
        "Programming Language :: Python :: 3",
        "License :: OSI Approved :: MIT License", 
