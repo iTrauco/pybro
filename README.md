@@ -1,5 +1,18 @@
 # 🔥 PyBro CLI
 
+<!-- BADGES -->
+[![PyPI version](https://badge.fury.io/py/pybro-cli.svg)](https://badge.fury.io/py/pybro-cli)
+[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/pybro-cli)](https://pypi.org/project/pybro-cli/0.1.7/)
+[![Generic badge](https://img.shields.io/badge/Debian-24.04-blue.svg)](https://shields.io/)
+[![Generic badge](https://img.shields.io/badge/XFCE-4.18-green.svg)](https://shields.io/)
+[![GitHub license](https://img.shields.io/github/license/iTrauco/pybro)](https://github.com/iTrauco/pybro/blob/main/LICENSE)
+![GitHub stars](https://img.shields.io/github/stars/iTrauco/pybro?style=social)
+![GitHub forks](https://img.shields.io/github/forks/iTrauco/pybro?style=social)
+![GitHub followers](https://img.shields.io/github/followers/iTrauco?label=Follow&style=social)
+![Twitter Follow](https://img.shields.io/twitter/follow/iTrauco?style=social)
+
+---
+
 A Python-based CLI tool for managing Google Chrome profiles in Linux. Born from the need to quickly switch between Chrome profiles using keyboard shortcuts, especially when paired with XFCE's tiling window management. Create custom aliases to launch Chrome with specific profiles and URLs, then bind them to keyboard shortcuts for lightning-fast workflow management.
 
 ## 🚀 Why PyBro?
@@ -29,12 +42,17 @@ I built this tool because I needed a way to:
 ## 📦 Installation
 
 ```bash
-# Install from PyPI
+# Install specific version from PyPI
+pip install pybro-cli==0.1.7
+
+# Or latest version
 pip install pybro-cli
 
 # Run the CLI
 pybro
 ```
+
+**PyPI Package:** [https://pypi.org/project/pybro-cli/0.1.7/](https://pypi.org/project/pybro-cli/0.1.7/)
 
 ## 🎯 Example Workflow
 
