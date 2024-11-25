@@ -1,79 +1,136 @@
-# 📄 pybro-README.md (Project Specific)
-```markdown
-# 😎 Yo, It's PyBro!
+# 🔥 PyBro CLI
 
-Welcome to the Chrome Profile Manager - part of the PyBro collection of Python hacks for Debian 24.04! 
+A Python-based CLI tool for managing Google Chrome profiles in Linux. Born from the need to quickly switch between Chrome profiles using keyboard shortcuts, especially when paired with XFCE's tiling window management. Create custom aliases to launch Chrome with specific profiles and URLs, then bind them to keyboard shortcuts for lightning-fast workflow management.
 
-## 🤘 What's This Bad Boy Do?
+## 🚀 Why PyBro?
 
-Ever got tired of clicking around Chrome to switch between your work, personal, and secret meme-browsing profiles? Say no more, fam! This tool's got your back!
+I built this tool because I needed a way to:
+- Quickly switch between different Chrome profiles (work, personal, client projects)
+- Launch specific URLs in the correct profile
+- Bind these actions to keyboard shortcuts in XFCE
+- Integrate with tiling window management
+- Avoid clicking through Chrome's profile menu every time
 
-### 🚀 Features That Slap:
-- Create quick terminal commands for ANY Chrome profile
-- Jump straight to your favorite sites
-- Work with both Google and local profiles
-- No more clicking through Chrome's profile menu like a peasant
+## 💻 System Requirements
 
-## 🛠️ Quick Setup
+### Tested Environment
+- **OS**: Debian 24.04
+- **Desktop Environment**: XFCE 4.18
+- **Shell**: Zsh
+- **Browser**: Google Chrome (Latest Stable)
+
+## 📦 Quick Start on Debian
 
 ```bash
-# Clone this bad boy
-git clone https://github.com/yourusername/chrome-profile-manager.git
+# 1. Install pip if not already installed
+sudo apt update
+sudo apt install python3-pip
 
-# Jump in
-cd chrome-profile-manager
+# 2. Install PyBro CLI
+pip install pybro-cli
 
-# Set up your virtual environment (keep it clean, fam!)
-python3 -m venv venv
+# 3. Run
+pybro
+
+# 4. After creating aliases, reload your shell
+source ~/.zshrc
+```
+
+### Default Chrome Profile Path
+```bash
+~/.config/google-chrome/  # Linux (Debian/Ubuntu)
+```
+
+## 🎯 Example Workflows
+
+### 1. Work Profile Setup
+```bash
+# Create work profile alias
+pybro
+# Select option 1
+# Choose your work profile
+# Enter: work-chrome
+# Enter: https://workspace.google.com
+
+# Test it
+work-chrome  # Opens Chrome with work profile and Workspace
+```
+
+### 2. Client Project Setup
+```bash
+# Create client project alias
+pybro
+# Select option 1
+# Choose client profile
+# Enter: client1-chrome
+# Enter: https://client1.myproject.com
+
+# Test it
+client1-chrome  # Opens Chrome with client profile and project
+```
+
+### 3. XFCE Keyboard Shortcuts
+1. Open XFCE Settings → Keyboard → Application Shortcuts
+2. Click "Add"
+3. Example shortcuts:
+   ```bash
+   # Command: work-chrome
+   # Shortcut: Super + 1
+   
+   # Command: client1-chrome
+   # Shortcut: Super + 2
+   ```
+
+### 4. Tiling Management Example
+1. Create profile aliases for common layouts:
+   ```bash
+   # Development setup
+   pybro
+   # Create: dev-chrome
+   # URL: http://localhost:3000
+   
+   # Documentation
+   pybro
+   # Create: docs-chrome
+   # URL: https://docs.myproject.com
+   ```
+
+2. Set up XFCE tiling shortcuts:
+   - Tile left: `Super + Left`
+   - Tile right: `Super + Right`
+
+3. Create workflow shortcuts:
+   ```bash
+   # Development view
+   Super + 1  # Launch dev-chrome
+   Super + Left  # Tile to left
+   
+   # Documentation view
+   Super + 2  # Launch docs-chrome
+   Super + Right  # Tile to right
+   ```
+
+## 🛠 Development Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/iTrauco/pybro.git
+cd pybro
+
+# Create and activate virtual environment
+python -m venv venv
 source venv/bin/activate
 
-# Install the goods
-pip install -r requirements.txt
+# Install in editable mode
+pip install -e .
 
-# Run it!
-python main.py
+# Run locally
+pybro
 ```
 
-## 🎮 How to Use This Beast
+## 📝 Notes
 
-1. Fire it up:
-```bash
-python main.py
-```
+- **Shell**: Built for Zsh, should work with Bash (might need tweaks)
+- **OS**: Tested on Debian 24.04, can work on macOS with path modifications
+- **Profiles**: Scans `~/.config/google-chrome/` by default
 
-2. Choose your move:
-- Create a new profile shortcut (with URL)
-- Make a profile homepage shortcut
-- See what profiles you've got
-- Check the debug info if you're feeling techy
-
-## 🎯 Example Usage
-
-```bash
-# After setting up, you'll get commands like:
-work-chrome    # Launches your work profile
-reddit-chrome  # Jump straight to Reddit with your meme profile
-bank-chrome    # Your secure banking profile
-```
-
-## 💡 Pro Tips
-
-- Use different profiles for different vibes (work, personal, development)
-- Create shortcuts for your most-used sites
-- Keep your profiles organized with custom names
-
-## 🤝 Contributing
-
-Got some sick ideas to make this even better? Hit me up with a PR!
-
-## 🐛 Issues?
-
-Something not working? Create an issue and let's fix it together! 
-
-## 📜 License
-
-MIT License - Do whatever you want with it, just keep it cool! 
-
----
-Made with 🔥 by PyBro | Keeping Python Hacky Since 2024
-```

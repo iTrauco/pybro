@@ -3,16 +3,17 @@ from setuptools import setup, find_packages
 
 setup(
    name="pybro-cli",
-   version="0.1.1",  # Updated version
+   version="0.1.2",  # Increment version
    packages=find_packages(),
    include_package_data=True,
    install_requires=[
        "rich>=10.0.0",
+       "pathlib>=1.0.1",
+       "typing>=3.7.4",
    ],
    entry_points={
        "console_scripts": [
-           "pybro=chrome_profile_manager.__main__:main",
-           "pybro-chrome=chrome_profile_manager.__main__:main",
+           "pybro=chrome_profile_manager.__main__:main",  # Fixed entry point
        ],
    },
    author="Chris Trauco",
