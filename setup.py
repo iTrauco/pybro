@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
    name="pybro-cli",
-   version="0.1.2",  # Increment version
+   version="0.1.4",  # Increment version
    packages=find_packages(),
    include_package_data=True,
    install_requires=[
