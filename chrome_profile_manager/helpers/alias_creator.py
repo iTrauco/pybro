@@ -1,13 +1,13 @@
 """
 🏷️ Chrome Alias Creator Helper
-Manages creation and installation of Chrome profile aliases
+Manages creation and installation of Chrome profile aliases with consistent quote handling
 """
 # Standard library imports
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 import logging
 import subprocess
-import shlex
+import urllib.parse
 
 # Third-party imports
 from rich.console import Console
@@ -35,9 +35,32 @@ class ChromeAliasManager:
     """Handles creation and management of Chrome aliases"""
 
     @staticmethod
+    def clean_url(url: str) -> str:
+        """
+        Properly escapes and formats URL for shell usage
+        Args:
+            url: The URL to clean and escape
+        Returns: Properly escaped URL string
+        """
+        try:
+            # First, ensure the URL is properly encoded
+            parsed = urllib.parse.urlparse(url)
+            
+            # Reconstruct URL with properly encoded query parameters
+            clean_url = parsed._replace(
+                query=urllib.parse.quote_plus(parsed.query, safe='=&')
+            ).geturl()
+            
+            # Return URL with proper quoting
+            return f'"{clean_url}"'
+        except Exception as e:
+            log.error(f"Error cleaning URL: {e}")
+            raise
+
+    @staticmethod
     def create_chrome_alias(alias_name: str, profile: str, url: Optional[str] = None) -> str:
         """
-        🔨 Creates a Chrome alias command with exact quoting format
+        🔨 Creates a Chrome alias command with consistent quote handling
         Args:
             alias_name: Name for the new alias
             profile: Chrome profile directory name
@@ -45,18 +68,29 @@ class ChromeAliasManager:
         Returns: Formatted alias command
         """
         try:
-            # Start with the basic command
-            chrome_cmd = f'{CHROME_BINARY} --profile-directory=\\"Profile {profile.split()[-1]}\\" --new-window'
+            # Ensure consistent profile directory formatting with escaped quotes
+            profile_part = f'--profile-directory=\\"Profile {profile.split()[-1]}\\"'
+            
+            # Build the base command
+            chrome_cmd_parts = [
+                CHROME_BINARY,
+                profile_part,
+                '--new-window'
+            ]
             
             # Add URL if provided
             if url:
+                # Ensure URL has protocol
                 if not url.startswith(('http://', 'https://')):
                     url = f'https://{url}'
-                chrome_cmd = f'{chrome_cmd} "{url}"'
-            else:
-                chrome_cmd = f'{chrome_cmd} \\'  # Add backslash if no URL
+                
+                # Add URL with proper quotes
+                chrome_cmd_parts.append(f'"{url}"')
             
-            # Create the complete alias command
+            # Join command parts
+            chrome_cmd = ' '.join(chrome_cmd_parts)
+            
+            # Create the complete alias command with outer double quotes
             alias_cmd = f'alias {alias_name}="{chrome_cmd}"'
             
             log.debug(f"Created alias command: {alias_cmd}")
@@ -95,9 +129,26 @@ class ChromeAliasManager:
             return False
 
     @staticmethod
+    def validate_zsh_syntax() -> bool:
+        """
+        Validates zsh syntax after adding new alias
+        Returns: True if syntax is valid, False otherwise
+        """
+        try:
+            result = subprocess.run(
+                ['zsh', '-n', str(ZSHRC_PATH)],
+                capture_output=True,
+                text=True
+            )
+            return result.returncode == 0
+        except Exception as e:
+            log.error(f"Error validating zsh syntax: {e}")
+            return False
+
+    @staticmethod
     def add_alias_to_zshrc(alias_cmd: str) -> bool:
         """
-        💾 Saves alias to .zshrc file
+        💾 Saves alias to .zshrc file with validation
         Args:
             alias_cmd: Formatted alias command to save
         Returns: Success status
@@ -116,6 +167,11 @@ class ChromeAliasManager:
             with open(ZSHRC_PATH, "a") as f:
                 f.write("\n# 🌐 Chrome Profile Alias - Created by PyBro CLI")
                 f.write(f"\n{alias_cmd}\n")
+            
+            # Validate the new alias
+            if not ChromeAliasManager.validate_zsh_syntax():
+                log.warning("⚠️ Warning: New alias might have syntax issues")
+                console.print("⚠️ Warning: New alias might have syntax issues", style="yellow")
             
             # Show success message with command preview
             console.print("✅ Added alias to .zshrc:", style="green")
@@ -226,15 +282,26 @@ if __name__ == "__main__":
         # Test alias creation
         manager = ChromeAliasManager()
         
-        # Example: Create and add a test alias
-        test_alias = manager.create_chrome_alias(
-            alias_name="test-chrome",
-            profile="Profile 1",
-            url="https://example.com"
-        )
+        # Test cases
+        test_cases = [
+            # Simple URL
+            ("test-linkedin", "1", "https://linkedin.com"),
+            
+            # Complex URL with query parameters
+            ("test-gcp", "12", "https://console.cloud.google.com/functions/list?referrer=search&hl=en&project=test-project"),
+            
+            # URL with special characters
+            ("test-special", "2", "https://example.com/path?name=test&query=hello world&special=!@#$"),
+        ]
         
-        console.print("\n🧪 Testing Alias Creation:", style="bold blue")
-        console.print(f"Generated Command: {test_alias}", style="green")
+        for alias_name, profile, url in test_cases:
+            test_alias = manager.create_chrome_alias(
+                alias_name=alias_name,
+                profile=profile,
+                url=url
+            )
+            console.print(f"\n🧪 Testing alias creation for {alias_name}:", style="bold blue")
+            console.print(f"Generated Command: {test_alias}", style="green")
         
         # List existing aliases
         console.print("\n📋 Existing Chrome Aliases:", style="bold blue")
